@@ -1,0 +1,129 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Campos de formulario: <ck-input> y <ck-select> (diseño de caja con etiqueta arriba).
+// Todo sale de los tokens `--ck-*`; no escribir colores ni medidas sueltas aquí.
+// ─────────────────────────────────────────────────────────────────────────────
+
+ck-input, ck-select, ck-fecha { display: block; }
+
+.ck-field {
+  display: flex;
+  align-items: center;
+  gap: var(--ck-space-2);
+  width: 100%;
+  min-height: var(--ck-touch-target);
+  padding: var(--ck-space-2) var(--ck-space-3);
+  background: var(--ck-color-surface);
+  border: 1px solid var(--ck-color-border);
+  border-radius: var(--ck-radius-lg);
+  color: var(--ck-color-text);
+  font: inherit;
+  text-align: left;
+  transition: border-color var(--ck-motion-fast), box-shadow var(--ck-motion-fast);
+
+  &:focus-within { border-color: var(--ck-color-primary); box-shadow: 0 0 0 1px var(--ck-color-primary); }
+  &.is-readonly { background: var(--ck-color-bg); }
+  &.has-error { border-color: var(--ck-color-danger); box-shadow: 0 0 0 1px var(--ck-color-danger); }
+  &--area { align-items: flex-start; }
+
+  &__inner { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; cursor: text; }
+  &__label { font-size: var(--ck-font-size-xs); line-height: var(--ck-line-height-tight); color: var(--ck-color-text-muted); }
+
+  &__control {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ck-color-text);
+    font: inherit;
+    font-size: var(--ck-font-size-md);
+    line-height: var(--ck-line-height-normal);
+    resize: vertical;
+
+    &::placeholder { color: var(--ck-color-text-muted); opacity: 0.8; }
+  }
+
+  &[data-variante='codigo'] .ck-field__control { text-align: center; font-size: var(--ck-font-size-xl); letter-spacing: 0.4em; font-variant-numeric: tabular-nums; }
+  &[data-variante='mono'] .ck-field__control { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: var(--ck-font-size-sm); }
+
+  &__action {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ck-radius-pill);
+    background: transparent;
+    color: var(--ck-color-primary);
+    font-size: 1.25rem;
+    cursor: pointer;
+
+    &:focus-visible { outline: 2px solid var(--ck-color-primary); outline-offset: 2px; }
+  }
+
+  &__error { display: flex; align-items: flex-start; gap: var(--ck-space-1); margin: var(--ck-space-1) var(--ck-space-3) 0; font-size: var(--ck-font-size-sm); font-weight: var(--ck-font-weight-medium); color: var(--ck-color-danger); .ck-icon { margin-top: 2px; font-size: 1rem; } }
+  &__helper { margin: var(--ck-space-1) var(--ck-space-3) 0; font-size: var(--ck-font-size-xs); color: var(--ck-color-text-muted); }
+}
+
+// Selector: la caja es un botón.
+.ck-select {
+  cursor: pointer;
+  &:disabled { opacity: 0.5; cursor: default; }
+  &:focus-visible { outline: 2px solid var(--ck-color-primary); outline-offset: 2px; }
+
+  .ck-field__value { font-size: var(--ck-font-size-md); line-height: var(--ck-line-height-normal); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; &.is-empty { color: var(--ck-color-text-muted); } }
+  .ck-field__icon { flex: none; color: var(--ck-color-primary); font-size: 1rem; }
+}
+
+// Lista de opciones: tarjeta centrada sobre el fondo oscurecido.
+ion-modal.ck-select-modal {
+  --width: min(22.5rem, calc(100% - 3rem));
+  --height: auto;
+  --max-height: 80vh;
+  --border-radius: var(--ck-radius-xl);
+  --background: transparent;
+  --box-shadow: none;
+  --backdrop-opacity: 0.6;
+  align-items: center;
+  justify-content: center;
+
+  &::part(backdrop) { background: var(--ck-color-nav-bg); }
+  &::part(content) { background: transparent; border-radius: var(--ck-radius-xl); overflow: visible; }
+}
+
+.ck-select-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: var(--ck-space-2);
+  background: var(--ck-color-surface);
+  border-radius: var(--ck-radius-xl);
+  box-shadow: var(--ck-shadow-md);
+
+  &__head { display: flex; align-items: center; justify-content: space-between; gap: var(--ck-space-2); padding: 0 var(--ck-space-1) var(--ck-space-1) var(--ck-space-3); }
+  &__title { font-size: var(--ck-font-size-sm); font-weight: var(--ck-font-weight-semibold); color: var(--ck-color-text-muted); }
+
+  &__option {
+    display: block;
+    width: 100%;
+    min-height: var(--ck-touch-target);
+    padding: var(--ck-space-3) var(--ck-space-4);
+    border: 0;
+    border-radius: var(--ck-radius-lg);
+    background: transparent;
+    color: var(--ck-color-text);
+    font: inherit;
+    font-size: var(--ck-font-size-md);
+    text-align: left;
+    cursor: pointer;
+
+    &:hover { background: var(--ck-color-bg); }
+    &:focus-visible { outline: 2px solid var(--ck-color-primary); outline-offset: -2px; }
+    &.is-selected { background: var(--ck-color-primary); color: var(--ck-color-on-primary); font-weight: var(--ck-font-weight-medium); }
+  }
+}

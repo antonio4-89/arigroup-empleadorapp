@@ -1,0 +1,12 @@
+// Puntos de quiebre únicos de la app. No escribir anchos de @media en otros archivos.
+$bp-phone: 40rem;   // 640px: teléfono
+$bp-wide: 56rem;    // 896px: decoración ampliada de marca
+$bp-desktop: 62rem; // 992px: aparece el menú lateral (coincide con ion-split-pane)
+$bp-dash: 68.75rem; // 1100px: el tablero pasa a una columna
+
+// Los límites superiores originales eran inclusivos (max-width: 640px / 1100px).
+$bp-phone-end: 40.0625rem;
+$bp-dash-end: 68.8125rem;
+
+@mixin up($bp) { @media (min-width: $bp) { @content; } }
+@mixin down($bp) { @media (max-width: calc(#{$bp} - 0.0625rem)) { @content; } }

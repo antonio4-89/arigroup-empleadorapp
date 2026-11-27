@@ -1,0 +1,7 @@
+{
+  "name": "empleador",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

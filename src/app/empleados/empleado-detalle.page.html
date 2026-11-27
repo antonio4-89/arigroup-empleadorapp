@@ -1,0 +1,102 @@
+<ck-page [titulo]="empleado()?.nombre ?? 'Colaborador'" [subtitulo]="empleado() ? empleado()!.puesto + ' · ' + empleado()!.departamento + ' · ' + empleado()!.sede : ''" backHref="/empleados" [menu]="true">
+  @if (error()) { <p class="ck-notice ck-notice--error" role="alert">{{ error() }}</p> }
+  @if (aviso()) { <p class="ck-notice ck-notice--ok" role="status">{{ aviso() }}</p> }
+
+  @if (empleado(); as e) {
+    <section class="ck-card ck-emp__perfil" aria-label="Datos del colaborador">
+      <span class="ck-avatar ck-avatar--lg" aria-hidden="true">{{ iniciales(e.nombre) }}</span>
+      <dl class="ck-emp__datos">
+        <div><dt>Número</dt><dd>{{ e.numero }}</dd></div>
+        <div><dt>Modalidad</dt><dd>{{ etqModalidad[e.modalidad] }}</dd></div>
+        <div><dt>Turno</dt><dd>{{ turno()?.nombre ?? '—' }}<small>{{ e.horario }}</small></dd></div>
+        <div><dt>Ingreso</dt><dd>{{ e.fechaIngreso | ckFecha }}</dd></div>
+        <div><dt>Correo</dt><dd>{{ e.correo }}</dd></div>
+        <div><dt>Hoy</dt><dd><ion-badge [color]="clrHoy[e.estadoHoy]">{{ etqHoy[e.estadoHoy] }}</ion-badge></dd></div>
+      </dl>
+    </section>
+
+    <section class="ck-stack" aria-labelledby="h-asistencia">
+      <div class="ck-section-head">
+        <h2 id="h-asistencia">Asistencia</h2>
+        <div class="ck-chips" role="group" aria-label="Periodo">
+          @for (r of rangos; track r) {
+            <button type="button" class="ck-chip" [attr.aria-pressed]="rango() === r" (click)="cambiarRango(r)">Últimos {{ r }} días</button>
+          }
+        </div>
+      </div>
+
+      <div class="ck-kpis">
+        <div class="ck-kpi ck-kpi--success"><span class="ck-kpi__label">Días trabajados</span><span class="ck-kpi__value">{{ resumen().trabajados }}</span><span class="ck-kpi__sub">{{ resumen().horas }} h en total</span></div>
+        <div class="ck-kpi ck-kpi--warning"><span class="ck-kpi__label">Retardos</span><span class="ck-kpi__value">{{ resumen().retardos }}</span><span class="ck-kpi__sub">{{ resumen().minutosRetardo }} min acumulados</span></div>
+        <div class="ck-kpi ck-kpi--danger"><span class="ck-kpi__label">Faltas</span><span class="ck-kpi__value">{{ resumen().faltas }}</span><span class="ck-kpi__sub">sin justificar en el periodo</span></div>
+        <div class="ck-kpi ck-kpi--primary"><span class="ck-kpi__label">Puntualidad</span><span class="ck-kpi__value">{{ resumen().puntualidad === null ? '—' : resumen().puntualidad + '%' }}</span><span class="ck-kpi__sub">días a tiempo sobre días trabajados</span></div>
+      </div>
+
+      <div class="ck-card">
+        <app-asistencia-chart [jornadas]="jornadas()" [meta]="metaHoras()" />
+      </div>
+    </section>
+
+    <section class="ck-stack" aria-labelledby="h-equipos">
+      <div class="ck-section-head">
+        <h2 id="h-equipos">Dispositivos registrados</h2>
+        @if (pendientes()) { <ion-badge color="warning">{{ pendientes() }} por vincular</ion-badge> }
+      </div>
+      <div class="ck-emp__equipos">
+        @for (d of equipos(); track d.id) {
+          <article class="ck-card ck-emp__equipo">
+            <header class="ck-emp__equipo-cab">
+              <span class="ck-emp__equipo-ico" aria-hidden="true"><ck-icon [name]="icoPlataforma[d.plataforma]" /></span>
+              <div class="ck-grow">
+                <strong>{{ d.nombre }}</strong>
+                <small>{{ d.plataforma }}</small>
+              </div>
+              <ion-badge [color]="clrEquipo[d.estado]">{{ etqEquipo[d.estado] }}</ion-badge>
+            </header>
+
+            <dl class="ck-emp__equipo-datos">
+              <div><dt>Vinculado</dt><dd>{{ d.vinculadoEl | ckFecha }}</dd></div>
+              <div><dt>Último uso</dt><dd>{{ d.ultimoUso ? (d.ultimoUso | ckFecha) : 'Sin uso' }}@if (d.ultimoUso) { <small>{{ d.ultimoUso | ckHora }}</small> }</dd></div>
+              <div><dt>Checadas totales</dt><dd>{{ d.checadasTotal }}</dd></div>
+              <div><dt>Últimos 30 días</dt><dd>{{ d.checadasUltimos30Dias }}</dd></div>
+            </dl>
+            @if (d.comentario) { <p class="ck-text-sm ck-text-muted">RH: {{ d.comentario }}</p> }
+
+            <div class="ck-emp__equipo-acciones">
+              <button type="button" class="ck-link" [attr.aria-expanded]="abiertos().has(d.id)" (click)="alternar(d.id)">
+                {{ abiertos().has(d.id) ? 'Ocultar historial' : 'Ver historial de uso' }}
+              </button>
+              <span class="ck-grow"></span>
+              @if (d.estado === 'Pendiente') {
+                <ion-button *ckPuede="'configurar'" size="small" color="success" (click)="vincular(d)">Vincular</ion-button>
+                <ion-button *ckPuede="'configurar'" size="small" color="danger" fill="outline" (click)="revocar(d)">Rechazar</ion-button>
+              } @else if (d.estado === 'Aprobado') {
+                <ion-button *ckPuede="'configurar'" size="small" color="danger" fill="outline" (click)="revocar(d)">Revocar</ion-button>
+              } @else {
+                <ion-button *ckPuede="'configurar'" size="small" fill="outline" (click)="vincular(d)">Restablecer</ion-button>
+              }
+            </div>
+
+            @if (abiertos().has(d.id)) {
+              <ul class="ck-emp__usos">
+                @for (u of d.recientes; track u.hora) {
+                  <li>
+                    <span class="ck-emp__uso-hora">{{ u.hora | ckFecha }} · {{ u.hora | ckHora }}</span>
+                    <span class="ck-grow">{{ etqChecada[u.tipo] }}<small>{{ u.lugar || 'Sin lugar detectado' }}</small></span>
+                    <ion-badge [color]="clrValidacion[u.validacion]">{{ etqValidacion[u.validacion] }}</ion-badge>
+                  </li>
+                } @empty {
+                  <li class="ck-text-muted ck-text-sm">Este equipo todavía no se ha usado para checar.</li>
+                }
+              </ul>
+            }
+          </article>
+        } @empty {
+          <p class="ck-text-muted">Todavía no registra ningún dispositivo. Aparecerá aquí cuando lo vincule desde la app.</p>
+        }
+      </div>
+    </section>
+  } @else if (cargado()) {
+    <p class="ck-text-muted">No encontramos a este colaborador.</p>
+  }
+</ck-page>

@@ -1,0 +1,13 @@
+// Punto de entrada de los estilos de empleador. El orden importa.
+// Colores y medidas: editar tokens/tokens.ts y ejecutar npm run build:tokens.
+@use 'ionic-core';
+@use 'tokens-generated';
+@use 'ionic-overrides';
+@use 'base';
+@use 'icons';
+@use 'forms';
+@use 'calendario';
+@use 'importacion';
+@use 'components';
+@use 'modulos';
+@use 'tipografia';

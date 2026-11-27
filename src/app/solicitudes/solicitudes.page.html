@@ -1,0 +1,39 @@
+<ck-page titulo="Solicitudes" [menu]="true">
+  <div class="ck-filters">
+    <div class="ck-chips" role="group" aria-label="Filtro">
+      <button type="button" class="ck-chip" [attr.aria-pressed]="filtro() === 'pendientes'" (click)="cambiar('pendientes')">Pendientes ({{ pendientes() }})</button>
+      <button type="button" class="ck-chip" [attr.aria-pressed]="filtro() === 'todas'" (click)="cambiar('todas')">Todas</button>
+    </div>
+    <ck-select [value]="tipo()" aria-label="Tipo" (cambio)="cambiarTipo($event)">
+      <ck-opcion valor="" etiqueta="Todos los tipos" />
+      @for (t of tipos; track t[0]) { <ck-opcion [valor]="t[0]" etiqueta="{{ t[1] }}" /> }
+    </ck-select>
+    <ion-searchbar placeholder="Buscar colaborador" aria-label="Buscar" [value]="busqueda()" [debounce]="150" (ionInput)="buscar($any($event.detail.value ?? ''))" />
+  </div>
+
+  <div class="ck-table-wrap">
+    <table class="ck-table">
+      <thead><tr><th>Colaborador</th><th>Tipo</th><th>Fechas</th><th>Motivo</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        @for (s of pag.visibles(); track s.id) {
+          <tr>
+            <td>{{ s.empleado }}</td>
+            <td>{{ etqTipo[s.tipo] }}@if (s.horas) { · {{ s.horas }} h }</td>
+            <td class="nw">{{ s.desde | ckFecha }}@if (s.hasta !== s.desde) { → {{ s.hasta | ckFecha }} }</td>
+            <td>{{ s.motivo }}@if (s.folio) { <span class="ck-text-muted"> · {{ s.folio }}</span> }</td>
+            <td><ion-badge [color]="clrEstado[s.estado]">{{ etqEstado[s.estado] }}</ion-badge></td>
+            <td class="ck-actions">
+              @if (s.estado === 'Pendiente') {
+                <ion-button *ckPuede="'resolver'" size="small" color="success" (click)="aprobar(s)">Aprobar</ion-button>
+                <ion-button *ckPuede="'resolver'" size="small" color="danger" fill="outline" (click)="rechazar(s)">Rechazar</ion-button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="ck-text-muted">No hay solicitudes.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <ck-paginador [p]="pag" />
+</ck-page>

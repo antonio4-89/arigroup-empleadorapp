@@ -1,0 +1,40 @@
+<ck-page titulo="Privacidad" [menu]="true">
+
+  <div class="ck-toolbar"><h2 class="ck-section-title">Solicitudes de derechos ARCO</h2><span class="ck-text-muted">Plazo: 20 días hábiles</span></div>
+  <div class="ck-table-wrap">
+    <table class="ck-table">
+      <thead><tr><th>Colaborador</th><th>Derecho</th><th>Detalle</th><th>Responder antes de</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        @for (a of lista(); track a.id) {
+          <tr>
+            <td>{{ a.empleado }}</td>
+            <td>{{ etq[a.derecho] }}</td>
+            <td>{{ a.detalle }}@if (a.respuesta) { <div class="ck-text-muted">Respuesta: {{ a.respuesta }}</div> }</td>
+            <td>{{ a.limite | ckFecha }}@if (vencida(a)) { <div class="ck-text-danger">Vencida</div> }</td>
+            <td><ion-badge [color]="clrEstado[a.estado]">{{ etqEstado[a.estado] }}</ion-badge></td>
+            <td class="ck-actions">
+              @if (a.estado !== 'Atendida') {
+                <ion-button *ckPuede="'configurar'" size="small" (click)="atender(a)">Responder</ion-button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="ck-text-muted">Sin solicitudes.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="ck-section-title">Qué se recolecta y por cuánto tiempo</h2>
+  <div class="ck-table-wrap">
+    <table class="ck-table">
+      <thead><tr><th>Dato</th><th>Para qué</th><th>Cuándo se toma</th><th>Conservación propuesta</th></tr></thead>
+      <tbody>
+        @for (d of datos; track d.dato) {
+          <tr><td>{{ d.dato }}</td><td>{{ d.uso }}</td><td>{{ d.cuando }}</td><td>{{ d.conservacion }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+</ck-page>
