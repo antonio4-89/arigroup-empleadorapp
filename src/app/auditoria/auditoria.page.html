@@ -1,0 +1,62 @@
+<ck-page titulo="Bitácora e integridad" [menu]="true">
+
+  @if (integridad(); as i) {
+    <section class="ck-card ck-stack">
+      <div class="ck-row ck-row--between">
+        <h2 class="ck-card__title">Integridad del registro</h2>
+        <span class="ck-pill" [class]="i.integra ? 'ck-pill ck-pill--success' : 'ck-pill ck-pill--danger'">{{ i.integra ? 'Íntegro' : 'Alterado' }}</span>
+      </div>
+      @if (i.integra) {
+        <p class="ck-notice ck-notice--ok" role="status">
+          {{ i.registros }} registros verificados, sin alteraciones.
+        </p>
+      } @else {
+        <p class="ck-notice ck-notice--error" role="alert">
+          Alteración detectada en el folio <strong>{{ i.primerFallo?.folio }}</strong> ({{ i.primerFallo?.empleado }}).
+        </p>
+      }
+      <dl class="ck-dl ck-chain">
+        <dt>Último sello</dt><dd><code>{{ i.ultimoSello }}</code></dd>
+        <dt>Verificado</dt><dd>{{ i.verificadoEl | ckFecha }} {{ i.verificadoEl | ckHora }}</dd>
+        <dt>Constancia</dt><dd>{{ i.constancia.folio }}</dd>
+      </dl>
+      <div class="ck-row">
+        <ion-button size="small" (click)="verificar()">Verificar ahora</ion-button>
+        @if (!alterado()) {
+          <ion-button size="small" fill="outline" color="medium" (click)="simular()">Demostración: alterar un registro</ion-button>
+        } @else {
+          <ion-button size="small" fill="outline" color="medium" (click)="restaurar()">Demostración: restaurar</ion-button>
+        }
+      </div>
+    </section>
+  }
+
+  <h2 class="ck-section-title">Bitácora</h2>
+  <div class="ck-filters">
+    <ck-select [value]="filtro()" aria-label="Tipo de acción" (cambio)="cambiarFiltro($event)">
+      <ck-opcion valor="todas" etiqueta="Todas las acciones" />
+      @for (a of acciones; track a) { <ck-opcion [valor]="a" etiqueta="{{ etq[a] }}" /> }
+    </ck-select>
+    <ion-searchbar placeholder="Buscar persona o detalle" aria-label="Buscar" [value]="busqueda()" [debounce]="150" (ionInput)="buscar($any($event.detail.value ?? ''))" />
+  </div>
+  <div class="ck-table-wrap">
+    <table class="ck-table">
+      <thead><tr><th>Fecha</th><th>Persona</th><th>Acción</th><th>Objeto</th><th>Detalle</th><th>IP</th></tr></thead>
+      <tbody>
+        @for (e of pag.visibles(); track e.id) {
+          <tr>
+            <td>{{ e.fecha | ckFecha }} {{ e.fecha | ckHora }}</td>
+            <td>{{ e.usuario }}<div><ion-badge [color]="clrRol[e.rol]">{{ etqRol[e.rol] }}</ion-badge></div></td>
+            <td><ion-badge [color]="clr[e.accion]">{{ etq[e.accion] }}</ion-badge></td>
+            <td>{{ e.objeto }}</td>
+            <td>{{ e.detalle }}</td>
+            <td>{{ e.ip }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="ck-text-muted">Sin eventos.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <ck-paginador [p]="pag" />
+</ck-page>

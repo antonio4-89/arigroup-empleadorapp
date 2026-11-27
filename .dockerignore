@@ -1,0 +1,9 @@
+node_modules
+www
+dist
+.angular
+coverage
+test-results
+playwright-report
+.vscode
+.DS_Store

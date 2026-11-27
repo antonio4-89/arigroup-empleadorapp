@@ -1,0 +1,96 @@
+<ck-page titulo="Panel de control" [menu]="true">
+  @if (resumen(); as r) {
+    @if (r.contingenciaActiva; as c) {
+      <div class="ck-banner ck-banner--contingencia" role="status">
+        <strong>Contingencia activa: {{ etqCont[c.tipo] }} · {{ c.alcance }}</strong>
+        <a routerLink="/contingencias">Administrar</a>
+      </div>
+    }
+
+    @if (asistencia(); as a) {
+      <div class="ck-kpis">
+        <div class="ck-kpi ck-kpi--success"><span class="ck-kpi__label">Presentes</span><span class="ck-kpi__value">{{ presentes() }}</span><span class="ck-kpi__sub">{{ pct() }}% de {{ a.total }} colaboradores</span></div>
+        <div class="ck-kpi ck-kpi--warning"><span class="ck-kpi__label">Retardos</span><span class="ck-kpi__value">{{ a.retardos }}</span><span class="ck-kpi__sub">{{ pctDe(a.retardos, a.total) }}% de la plantilla</span></div>
+        <div class="ck-kpi ck-kpi--danger"><span class="ck-kpi__label">Sin registro</span><span class="ck-kpi__value">{{ a.ausentes }}</span><span class="ck-kpi__sub">{{ a.justificados }} con permiso o incapacidad</span></div>
+        <div class="ck-kpi ck-kpi--primary"><span class="ck-kpi__label">Por atender</span><span class="ck-kpi__value">{{ porAtender() }}</span><span class="ck-kpi__sub">{{ r.porRevisar }} checadas por revisar</span></div>
+      </div>
+
+      <div class="ck-dash">
+        <section class="ck-card ck-stack">
+          <div class="ck-row ck-row--between">
+            <h2 class="ck-card__title">Asistencia, 14 días hábiles</h2>
+            <ck-select [value]="sede()" aria-label="Sede" (cambio)="cambiarSede($event)">
+              <ck-opcion valor="" etiqueta="Todas las sedes" />
+              @for (s of a.sedes; track s) { <ck-opcion [valor]="s" etiqueta="{{ s }}" /> }
+            </ck-select>
+          </div>
+          <ck-area-chart [valores]="valores()" [etiquetas]="etiquetas()" descripcion="Porcentaje de asistencia diaria" />
+
+          <div class="ck-table-wrap">
+            <table class="ck-table">
+              <thead><tr><th>Área</th><th class="num">Total</th><th class="num">Presentes</th><th class="num">Retardos</th><th class="num">Sin registro</th><th class="num">vs. ayer</th></tr></thead>
+              <tbody>
+                @for (x of a.areas; track x.area) {
+                  <tr>
+                    <td>{{ x.area }}</td>
+                    <td class="num">{{ x.total }}</td>
+                    <td class="num">{{ pctDe(x.aTiempo + x.enComida + x.retardos, x.total) }}%</td>
+                    <td class="num" [class.ck-text-warning]="x.retardos > 0">{{ x.retardos }}</td>
+                    <td class="num" [class.ck-text-danger]="x.ausentes > 0">{{ x.ausentes }}</td>
+                    <td class="num"><span class="ck-delta" [class.ck-delta--up]="x.cambio >= 0" [class.ck-delta--down]="x.cambio < 0">{{ x.cambio >= 0 ? '+' : '' }}{{ x.cambio }}%</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="ck-card ck-stack">
+          <h2 class="ck-card__title">Requiere tu atención</h2>
+          @if (atencion().length) {
+            <ul class="ck-todo">
+              @for (x of atencion(); track x.texto) {
+                <li>
+                  <a class="ck-todo__item" [routerLink]="x.ruta">
+                    <span [class]="'ck-pill ck-pill--' + (x.tono === 'primary' ? 'primary' : x.tono)">{{ x.valor }}</span>
+                    <span>{{ x.texto }}</span>
+                    <ck-icon name="chevron-forward" />
+                  </a>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="ck-notice ck-notice--ok">Todo al día.</p>
+          }
+        </section>
+      </div>
+    }
+
+    @if (porRevisar().length) {
+      <section class="ck-card ck-stack">
+        <div class="ck-row ck-row--between">
+          <h2 class="ck-card__title">Últimas checadas por revisar</h2>
+          <a class="ck-link" routerLink="/revision">Ver todas ({{ r.porRevisar }})</a>
+        </div>
+        <div class="ck-table-wrap">
+          <table class="ck-table">
+            <thead><tr><th>Hora</th><th>Colaborador</th><th>Registro</th><th>Motivo</th><th>Estado</th></tr></thead>
+            <tbody>
+              @for (c of porRevisar(); track c.id) {
+                <tr>
+                  <td class="nw">{{ c.horaServidor | ckHora }}</td>
+                  <td>{{ c.empleado }}</td>
+                  <td>{{ etqChecada[c.tipo] }}</td>
+                  <td>{{ c.motivos[0] || c.lugar }}</td>
+                  <td><ck-status [validacion]="c.validacion" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  } @else {
+    <p class="ck-text-muted">Cargando…</p>
+  }
+</ck-page>

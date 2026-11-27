@@ -1,0 +1,85 @@
+<ck-page titulo="Reportes" [menu]="true">
+  <div class="ck-stat-grid">
+    <ck-stat [valor]="totales().extra" etiqueta="Horas extra" tono="primary" />
+    <ck-stat [valor]="totales().sinAutorizar" etiqueta="Extra sin autorización" tono="warning" />
+    <ck-stat [valor]="totales().retardos" etiqueta="Retardos" tono="warning" />
+    <ck-stat [valor]="totales().faltas" etiqueta="Faltas" tono="danger" />
+    <ck-stat [valor]="totales().alertas" etiqueta="Alertas de límite" tono="danger" />
+  </div>
+
+  <div class="ck-toolbar">
+    <div class="ck-chips" role="group" aria-label="Vista">
+      @for (v of vistas; track v.id) {
+        <button type="button" class="ck-chip" [attr.aria-pressed]="vista() === v.id" (click)="vista.set(v.id)">{{ v.texto }}</button>
+      }
+    </div>
+    @if (vista() === 'semana') { <ion-button size="small" fill="outline" (click)="exportarCsv()">Exportar CSV</ion-button> }
+  </div>
+
+  @switch (vista()) {
+    @case ('semana') {
+      <div class="ck-filters">
+        <ion-searchbar placeholder="Buscar colaborador" aria-label="Buscar" [value]="busqueda()" [debounce]="150" (ionInput)="buscar($any($event.detail.value ?? ''))" />
+        <button type="button" class="ck-chip" [attr.aria-pressed]="soloAlertas()" (click)="alternarAlertas()">Solo con novedades</button>
+      </div>
+      <div class="ck-table-wrap">
+        <table class="ck-table">
+          <thead><tr><th>Colaborador</th><th class="num">Días</th><th class="num">Horas</th><th class="num">Extra</th><th class="num">Sin autorizar</th><th class="num">Retardos</th><th class="num">Faltas</th></tr></thead>
+          <tbody>
+            @for (f of pag.visibles(); track f.empleadoId) {
+              <tr>
+                <td>{{ f.empleado }}</td><td class="num">{{ f.diasTrabajados }}</td><td class="num">{{ f.horasOrdinarias }}</td>
+                <td class="num">{{ f.extraDobles + f.extraTriples }}</td><td class="num" [class.ck-text-warning]="f.extraSinAutorizar > 0">{{ f.extraSinAutorizar }}</td>
+                <td class="num">{{ f.retardos }}</td><td class="num" [class.ck-text-danger]="f.faltas > 0">{{ f.faltas }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="ck-text-muted">Sin resultados.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <ck-paginador [p]="pag" />
+    }
+
+    @case ('limites') {
+      <p class="ck-text-sm ck-text-muted">Máximo 3 h por día y 9 h a la semana (Art. 66).</p>
+      <ul class="ck-list">
+        @for (f of pagLimites.visibles(); track f.empleadoId) {
+          <li class="ck-list__item">
+            <div class="ck-row ck-row--between">
+              <strong>{{ f.empleado }}</strong>
+              <span [class]="cerca(f) ? 'ck-pill ck-pill--warning' : 'ck-pill'">{{ f.extraDobles + f.extraTriples }} de {{ limiteSemana }} h · {{ f.diasConExtra }} de {{ limiteDias }} días</span>
+            </div>
+            <div class="ck-meter" [class.ck-meter--warn]="cerca(f)" role="progressbar" [attr.aria-valuenow]="pct(f)" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Horas extra de ' + f.empleado">
+              <span [style.width.%]="pct(f)"></span>
+            </div>
+          </li>
+        }
+      </ul>
+      <ck-paginador [p]="pagLimites" />
+    }
+
+    @case ('constancias') {
+      <div class="ck-toolbar">
+        <span class="ck-text-muted">{{ firmadas() }} de {{ acuses().length }} firmadas</span>
+        <button type="button" class="ck-chip" [attr.aria-pressed]="soloPendientes()" (click)="alternarPendientes()">Solo pendientes</button>
+      </div>
+      <div class="ck-table-wrap">
+        <table class="ck-table">
+          <thead><tr><th>Colaborador</th><th>Estado</th><th>Fecha</th><th>Observación</th></tr></thead>
+          <tbody>
+            @for (a of pagAcuses.visibles(); track a.empleadoId) {
+              <tr>
+                <td>{{ a.empleado }}</td>
+                <td><span [class]="a.estado === 'Firmada' ? 'ck-pill ck-pill--success' : a.estado === 'Inconforme' ? 'ck-pill ck-pill--danger' : 'ck-pill ck-pill--warning'">{{ a.estado === 'Firmada' ? 'Conforme' : a.estado === 'Inconforme' ? 'Inconforme' : 'Sin responder' }}</span></td>
+                <td class="nw">{{ a.fecha ? (a.fecha | ckFecha) : '—' }}</td>
+                <td>{{ a.observacion ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <ck-paginador [p]="pagAcuses" />
+    }
+  }
+</ck-page>

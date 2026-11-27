@@ -1,0 +1,163 @@
+<ck-page titulo="Turnos y festivos" [menu]="true">
+  <ion-segment [value]="vista()" (ionChange)="vista.set($any($event.detail.value))">
+    <ion-segment-button value="general"><ion-label>Turnos y calendario</ion-label></ion-segment-button>
+    <ion-segment-button value="comida"><ion-label>Comida por colaborador</ion-label></ion-segment-button>
+    <ion-segment-button value="asignacion"><ion-label>Asignación</ion-label></ion-segment-button>
+  </ion-segment>
+  @if (error()) { <p class="ck-notice ck-notice--error" role="alert">{{ error() }}</p> }
+  @if (aviso()) { <p class="ck-notice ck-notice--ok" role="status">{{ aviso() }}</p> }
+
+  @switch (vista()) {
+    @case ('general') {
+      <section class="ck-stack" aria-labelledby="h-turnos">
+        <div class="ck-section-head">
+          <h2 id="h-turnos">Turnos</h2>
+          <ion-button *ckPuede="'configurar'" size="small" (click)="abrirTurno(null)">Agregar turno</ion-button>
+        </div>
+        <div class="ck-turnos">
+          @for (t of turnos(); track t.id) {
+            <article class="ck-turno">
+              <header class="ck-turno__head">
+                <strong>{{ t.nombre }}</strong>
+                <ion-badge color="medium">{{ t.tipo }}</ion-badge>
+              </header>
+              <p class="ck-turno__horario">{{ t.entrada }} – {{ t.salida }}</p>
+              <p class="ck-turno__meta">{{ t.diasLaborales }} · Descanso: {{ t.descanso }}</p>
+              <ul class="ck-turno__ajustes">
+                <li class="ck-turno__ajuste">
+                  <span>Tolerancia de entrada</span>
+                  <span class="ck-stepper">
+                    <button *ckPuede="'configurar'" type="button" class="ck-stepper__btn" aria-label="Reducir tolerancia de entrada" (click)="ajustar(t, { toleranciaMin: t.toleranciaMin - 5 })">−</button>
+                    <strong>{{ t.toleranciaMin }} min</strong>
+                    <button *ckPuede="'configurar'" type="button" class="ck-stepper__btn" aria-label="Aumentar tolerancia de entrada" (click)="ajustar(t, { toleranciaMin: t.toleranciaMin + 5 })">+</button>
+                  </span>
+                </li>
+                <li class="ck-turno__ajuste">
+                  <span>Comida</span>
+                  <span class="ck-stepper">
+                    <button *ckPuede="'configurar'" type="button" class="ck-stepper__btn" aria-label="Reducir comida" [disabled]="t.comidaMin <= 30" (click)="ajustar(t, { comidaMin: t.comidaMin - 15 })">−</button>
+                    <strong>{{ t.comidaMin }} min</strong>
+                    <button *ckPuede="'configurar'" type="button" class="ck-stepper__btn" aria-label="Aumentar comida" [disabled]="t.comidaMin >= 120" (click)="ajustar(t, { comidaMin: t.comidaMin + 15 })">+</button>
+                  </span>
+                </li>
+                <li class="ck-turno__ajuste">
+                  <span>Tolerancia de regreso</span>
+                  <span class="ck-stepper">
+                    <button *ckPuede="'configurar'" type="button" class="ck-stepper__btn" aria-label="Reducir tolerancia de regreso" (click)="ajustar(t, { toleranciaComidaMin: t.toleranciaComidaMin - 5 })">−</button>
+                    <strong>{{ t.toleranciaComidaMin }} min</strong>
+                    <button *ckPuede="'configurar'" type="button" class="ck-stepper__btn" aria-label="Aumentar tolerancia de regreso" (click)="ajustar(t, { toleranciaComidaMin: t.toleranciaComidaMin + 5 })">+</button>
+                  </span>
+                </li>
+              </ul>
+              <div class="ck-turno__pie">
+                <span>{{ t.empleados }} colaboradores</span>
+                <span class="ck-turno__acciones" *ckPuede="'configurar'">
+                  <ion-button size="small" fill="outline" [attr.aria-label]="'Editar turno ' + t.nombre" (click)="abrirTurno(t)">Editar</ion-button>
+                  <ion-button size="small" fill="outline" color="danger" [attr.aria-label]="'Eliminar turno ' + t.nombre" (click)="eliminarTurno(t)">Eliminar</ion-button>
+                </span>
+              </div>
+            </article>
+          }
+        </div>
+        <p class="ck-text-sm ck-text-muted">
+          La comida del turno aplica a todos sus colaboradores, salvo a quienes tengan comida pactada individualmente (pestaña "Comida por colaborador").
+          En jornada continua el descanso es de al menos 30 minutos (art. 63 LFT).
+        </p>
+      </section>
+
+      <section class="ck-stack" aria-labelledby="h-festivos">
+        <div class="ck-section-head">
+          <h2 id="h-festivos">Calendario de festivos</h2>
+          <ion-button *ckPuede="'configurar'" size="small" (click)="abrirFestivo(null)">Agregar festivo</ion-button>
+        </div>
+        <div class="ck-agenda">
+          <div class="ck-agenda__col">
+            <ck-calendario [marcas]="marcas()" leyenda="festivo obligatorio" leyendaPlural="festivos obligatorios" [(mes)]="mes" [(seleccion)]="dia" />
+            <div class="ck-cal-detalle" role="status">
+              @if (festivoDelDia(); as f) {
+                <strong>{{ f.nombre }}</strong>
+                <small>{{ f.fecha | ckFecha: 'larga' }} · {{ f.nota }}</small>
+                <div class="ck-turno__acciones" *ckPuede="'configurar'">
+                  <ion-button size="small" fill="outline" (click)="abrirFestivo(f)">Editar</ion-button>
+                  <ion-button size="small" fill="outline" color="danger" (click)="quitarFestivo(f)">Quitar</ion-button>
+                </div>
+              } @else if (dia()) {
+                <strong>Día sin festivo</strong>
+                <small>{{ dia() | ckFecha: 'larga' }}</small>
+              } @else {
+                <small>Elige un día del calendario o un festivo de la lista.</small>
+              }
+            </div>
+          </div>
+
+          <ul class="ck-festivos">
+            @for (f of festivos(); track f.fecha) {
+              <li><button type="button" class="ck-festivos__item" [class.is-sel]="f.fecha === dia()" (click)="verFestivo(f)">
+                <span class="ck-festivos__fecha"><strong>{{ f.fecha.slice(8) }}</strong><small>{{ mesCorto(f) }}</small></span>
+                <span class="ck-festivos__texto"><strong>{{ f.nombre }}</strong><small>{{ f.nota }}</small></span>
+              </button></li>
+            } @empty {
+              <li class="ck-text-muted">No quedan festivos este año.</li>
+            }
+          </ul>
+        </div>
+      </section>
+    }
+
+    @case ('comida') {
+      <div class="ck-section-head">
+        <h2>Comida pactada</h2>
+        <ion-button *ckPuede="'configurar'" size="small" (click)="abrirComida(null)">Agregar comida pactada</ion-button>
+      </div>
+      <div class="ck-table-wrap">
+        <table class="ck-table">
+          <thead><tr><th>Colaborador</th><th>Turno</th><th class="num">Comida del turno</th><th class="num">Comida pactada</th><th>Fundamento</th><th></th></tr></thead>
+          <tbody>
+            @for (e of excepciones(); track e.id) {
+              <tr>
+                <td>{{ e.nombre }}<div class="ck-text-muted">No. {{ e.numero }} · {{ e.departamento }}</div></td>
+                <td>{{ turnoDe(e)?.nombre }}</td>
+                <td class="num">{{ turnoDe(e)?.comidaMin }} min</td>
+                <td class="num"><strong>{{ e.comidaPactada!.minutos }} min</strong></td>
+                <td>{{ e.comidaPactada!.fundamento }}</td>
+                <td class="ck-actions">
+                  @if (permisos.puede('configurar')) {
+                    <button type="button" class="ck-link" (click)="abrirComida(e)">Editar</button> ·
+                    <button type="button" class="ck-link" (click)="quitarExcepcion(e)">Quitar</button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="ck-text-muted">Todos usan la comida de su turno.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @case ('asignacion') {
+      <ion-searchbar placeholder="Buscar colaborador" aria-label="Buscar" [value]="busqueda()" [debounce]="150" (ionInput)="buscar($any($event.detail.value ?? ''))" />
+      <div class="ck-table-wrap">
+        <table class="ck-table">
+          <thead><tr><th>Colaborador</th><th>Área</th><th>Horario actual</th><th>Comida</th><th>Turno</th></tr></thead>
+          <tbody>
+            @for (e of pag.visibles(); track e.id) {
+              <tr>
+                <td>{{ e.nombre }}</td>
+                <td>{{ e.departamento }}</td>
+                <td>{{ e.horario }}</td>
+                <td class="nw">{{ e.comidaPactada?.minutos ?? turnoDe(e)?.comidaMin }} min@if (e.comidaPactada) { <div class="ck-text-muted">Pactada</div> }</td>
+                <td>
+                  <ck-select [value]="e.turnoId" [aria-label]="'Turno de ' + e.nombre" (cambio)="asignar(e, $event)">
+                    @for (t of turnos(); track t.id) { <ck-opcion [valor]="t.id" etiqueta="{{ t.nombre }} ({{ t.entrada }}–{{ t.salida }})" /> }
+                  </ck-select>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <ck-paginador [p]="pag" />
+    }
+  }
+</ck-page>

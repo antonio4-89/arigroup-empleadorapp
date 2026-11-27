@@ -1,0 +1,62 @@
+<ck-page titulo="Lugares permitidos" [menu]="true">
+  <ion-segment [value]="vista()" (ionChange)="vista.set($any($event.detail.value))">
+    <ion-segment-button value="lista"><ion-label>Lista</ion-label></ion-segment-button>
+    <ion-segment-button value="mapa"><ion-label>Mapa</ion-label></ion-segment-button>
+  </ion-segment>
+
+  @if (vista() === 'mapa') {
+    <app-mapa-lugares [lugares]="lugares()" [ubicaciones]="ubicaciones()" [actualizado]="actualizado()" (actualizar)="actualizar()" />
+  } @else {
+  <h2 class="ck-section-title">Solicitudes de colaboradores</h2>
+  <div class="ck-table-wrap">
+    <table class="ck-table">
+      <thead><tr><th>Colaborador</th><th>Lugar</th><th>Días y vigencia</th><th>Motivo</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        @for (s of solicitudes(); track s.id) {
+          <tr>
+            <td>{{ s.empleado }}</td>
+            <td><strong>{{ s.nombre }}</strong><div class="ck-text-muted">{{ etq[s.tipo] }} · {{ s.direccion }}</div></td>
+            <td>{{ s.dias }}<div class="ck-text-muted">{{ s.vigencia }}</div></td>
+            <td>{{ s.motivo }}@if (s.comentarioResolucion) { <div class="ck-text-muted">RH: {{ s.comentarioResolucion }}</div> }</td>
+            <td><ion-badge [color]="clrEstado[s.estado]">{{ etqEstado[s.estado] }}</ion-badge></td>
+            <td class="ck-actions">
+              @if (s.estado === 'Pendiente') {
+                <ion-button *ckPuede="'configurar'" size="small" color="success" (click)="aprobar(s)">Aprobar</ion-button>
+                <ion-button *ckPuede="'configurar'" size="small" color="danger" fill="outline" (click)="rechazar(s)">Rechazar</ion-button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="ck-section-head">
+    <h2 class="ck-section-title">Lugares de la empresa</h2>
+    <ion-button *ckPuede="'configurar'" size="small" (click)="abrirLugar(null)">Agregar lugar</ion-button>
+  </div>
+  @if (error()) { <p class="ck-notice ck-notice--error" role="alert">{{ error() }}</p> }
+  @if (aviso()) { <p class="ck-notice ck-notice--ok" role="status">{{ aviso() }}</p> }
+  <div class="ck-grid">
+    @for (l of lugares(); track l.id) {
+      <article class="ck-card ck-stack">
+        <div class="ck-row ck-row--between">
+          <h2 class="ck-card__title">{{ l.nombre }}</h2>
+          <ion-badge color="primary">{{ etq[l.tipo] }}</ion-badge>
+        </div>
+        <span class="ck-text-sm">{{ l.direccion }}</span>
+        <dl class="ck-dl ck-text-sm">
+          @if (l.radioMetros) { <dt>Radio</dt><dd>{{ l.radioMetros }} m</dd> }
+          <dt>Vigencia</dt><dd>{{ l.vigencia }}</dd>
+          <dt>Asignados</dt><dd>{{ l.empleadosAsignados }} colaborador(es)</dd>
+          @if (l.redes.length) { <dt>Redes</dt><dd>{{ l.redes.join(' · ') }}</dd> }
+        </dl>
+        <div class="ck-turno__acciones" *ckPuede="'configurar'">
+          <ion-button size="small" fill="outline" [attr.aria-label]="'Editar lugar ' + l.nombre" (click)="abrirLugar(l)">Editar</ion-button>
+          <ion-button size="small" fill="outline" color="danger" [attr.aria-label]="'Eliminar lugar ' + l.nombre" (click)="eliminarLugar(l)">Eliminar</ion-button>
+        </div>
+      </article>
+    }
+  </div>
+  }
+</ck-page>

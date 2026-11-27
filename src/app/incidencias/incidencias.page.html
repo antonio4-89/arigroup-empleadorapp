@@ -1,0 +1,35 @@
+<ck-page titulo="Incidencias" [menu]="true">
+  <div class="ck-filters">
+    <div class="ck-chips" role="group" aria-label="Filtro">
+      <button type="button" class="ck-chip" [attr.aria-pressed]="filtro() === 'abiertas'" (click)="cambiar('abiertas')">Abiertas ({{ abiertas() }})</button>
+      <button type="button" class="ck-chip" [attr.aria-pressed]="filtro() === 'todas'" (click)="cambiar('todas')">Todas</button>
+    </div>
+    <ion-searchbar placeholder="Buscar colaborador" aria-label="Buscar" [value]="busqueda()" [debounce]="150" (ionInput)="buscar($any($event.detail.value ?? ''))" />
+  </div>
+
+  <ul class="ck-list">
+    @for (i of pag.visibles(); track i.id) {
+      <li class="ck-incident" [class.ck-emergency]="urgente(i)">
+        <ck-icon [name]="ico[i.tipo]" />
+        <div class="ck-incident__body">
+          <div class="ck-row ck-row--between">
+            <strong>{{ i.empleado }} · {{ etq[i.tipo] }}</strong>
+            <span class="ck-row">
+              @if (urgente(i)) { <ion-badge color="danger">Urgente</ion-badge> }
+              <ion-badge [color]="clrEstado[i.estado]">{{ etqEstado[i.estado] }}</ion-badge>
+            </span>
+          </div>
+          <span class="ck-clamp">{{ i.descripcion }}</span>
+          <span class="ck-text-sm ck-text-muted">{{ i.creada | ckFecha }} {{ i.creada | ckHora }} · {{ i.lugar }}</span>
+          @if (i.respuesta) { <span class="ck-text-sm">RH: {{ i.respuesta }}</span> }
+        </div>
+        @if (i.estado !== 'Atendida') {
+          <ion-button *ckPuede="'resolver'" size="small" (click)="responder(i)">Responder</ion-button>
+        }
+      </li>
+    } @empty {
+      <li class="ck-text-muted ck-text-center">Sin incidencias.</li>
+    }
+  </ul>
+  <ck-paginador [p]="pag" />
+</ck-page>

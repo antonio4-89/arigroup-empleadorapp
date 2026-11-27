@@ -1,0 +1,94 @@
+<ck-page titulo="Checadas por revisar" [menu]="true">
+  <div class="ck-filters">
+    <div class="ck-chips" role="group" aria-label="Filtro">
+      <button type="button" class="ck-chip" [attr.aria-pressed]="filtro() === 'revisar'" (click)="cambiar('revisar')">Validación de lugar ({{ porRevisar() }})</button>
+      <button type="button" class="ck-chip" [attr.aria-pressed]="filtro() === 'retardos'" (click)="cambiar('retardos')">Retardos ({{ retardos().total }})</button>
+      <button type="button" class="ck-chip" [attr.aria-pressed]="filtro() === 'todas'" (click)="cambiar('todas')">Todas</button>
+    </div>
+    <ion-searchbar placeholder="Buscar colaborador o lugar" aria-label="Buscar" [value]="busqueda()" [debounce]="150" (ionInput)="buscar($any($event.detail.value ?? ''))" />
+  </div>
+
+  @if (filtro() === 'retardos') {
+    <div class="ck-kpis ck-kpis--3">
+      <button type="button" class="ck-kpi ck-kpi--warning ck-kpi--btn" [attr.aria-pressed]="clase() === 'Entrada'" (click)="cambiarClase('Entrada')">
+        <span class="ck-kpi__label">Entradas tarde</span><span class="ck-kpi__value">{{ retardos().entradas }}</span><span class="ck-kpi__sub">Después de la tolerancia de entrada</span>
+      </button>
+      <button type="button" class="ck-kpi ck-kpi--warning ck-kpi--btn" [attr.aria-pressed]="clase() === 'Comida'" (click)="cambiarClase('Comida')">
+        <span class="ck-kpi__label">Comidas excedidas</span><span class="ck-kpi__value">{{ retardos().comidas }}</span><span class="ck-kpi__sub">Más que la comida pactada y su tolerancia</span>
+      </button>
+      <button type="button" class="ck-kpi ck-kpi--danger ck-kpi--btn" [attr.aria-pressed]="clase() === 'Corta'" (click)="cambiarClase('Corta')">
+        <span class="ck-kpi__label">Descansos menores a 30 min</span><span class="ck-kpi__value">{{ retardos().cortas }}</span><span class="ck-kpi__sub">Mínimo legal en jornada continua (art. 63)</span>
+      </button>
+      <div class="ck-kpi ck-kpi--danger"><span class="ck-kpi__label">Sin justificar</span><span class="ck-kpi__value">{{ retardos().sinJustificar }}</span><span class="ck-kpi__sub">Eligieron explicarlo después</span></div>
+      <button type="button" class="ck-kpi ck-kpi--primary ck-kpi--btn" [attr.aria-pressed]="lugar() === 'casa'" (click)="cambiarLugar('casa')">
+        <span class="ck-kpi__label">Desde home office</span><span class="ck-kpi__value">{{ retardos().desdeCasa }}</span><span class="ck-kpi__sub">Sin traslado: el motivo no puede ser transporte</span>
+      </button>
+      <div class="ck-kpi"><span class="ck-kpi__label">Falla de equipo de la empresa</span><span class="ck-kpi__value">{{ retardos().equipoEmpresa }}</span><span class="ck-kpi__sub">Causa del patrón en teletrabajo (art. 330-E)</span></div>
+    </div>
+    <p class="ck-text-sm ck-text-muted">
+      La hora registrada no se modifica. El motivo es contexto para decidir según el reglamento interior; justificar o sancionar un retardo es decisión de RH.
+      Un descanso menor a 30 minutos no es falta del colaborador: es una alerta de cumplimiento para la empresa.
+    </p>
+  }
+
+  <div class="ck-table-wrap">
+    <table class="ck-table">
+      @if (filtro() === 'retardos') {
+        <thead><tr><th>Hora</th><th>Colaborador</th><th>Tipo</th><th>Lugar</th><th class="num">Retardo</th><th>Motivo</th></tr></thead>
+        <tbody>
+          @for (c of pag.visibles(); track c.id) {
+            <tr>
+              <td class="nw">{{ c.horaServidor | ckHora }}</td>
+              <td>{{ c.empleado }}</td>
+              <td>
+                @if (c.retardo; as rt) {
+                  @if (rt.clase === 'Entrada') {
+                    <strong>Entrada</strong><div class="ck-text-muted">A las {{ rt.horaEntrada }} · tol. {{ rt.toleranciaMin }} min</div>
+                  } @else {
+                    <strong>Regreso de comida</strong><div class="ck-text-muted">Duró {{ rt.comidaRealMin }} de {{ rt.comidaPactadaMin }} min · tol. {{ rt.toleranciaMin }} min</div>
+                  }
+                } @else {
+                  <strong>Regreso de comida</strong><div class="ck-text-muted">Descanso de {{ c.descansoMin }} min</div>
+                }
+              </td>
+              <td>@if (c.retardo?.desdeCasa) { <span class="ck-tag ck-tag--primary">Home office</span> } @else { {{ c.lugar }} }</td>
+              <td class="num">
+                @if (c.retardo; as rt) { <strong class="ck-text-warning">{{ rt.minutos }} min</strong> } @else { — }
+              </td>
+              <td>
+                @if (c.retardo; as rt) {
+                  @if (rt.motivo; as m) {
+                    {{ etqMotivo[m] }}@if (rt.nota) { <div class="ck-text-muted">“{{ rt.nota }}”</div> }
+                  } @else {
+                    <span class="ck-pill ck-pill--danger">Sin justificar</span>
+                  }
+                } @else {
+                  <span class="ck-pill ck-pill--danger">Menor al mínimo legal</span><div class="ck-text-muted">Art. 63 LFT: al menos 30 min</div>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="ck-text-muted">Sin retardos con esos filtros.</td></tr>
+          }
+        </tbody>
+      } @else {
+        <thead><tr><th>Hora</th><th>Colaborador</th><th>Registro</th><th>Lugar</th><th>Estado</th><th>Motivo</th></tr></thead>
+        <tbody>
+          @for (c of pag.visibles(); track c.id) {
+            <tr>
+              <td class="nw">{{ c.horaServidor | ckFecha }} {{ c.horaServidor | ckHora }}</td>
+              <td>{{ c.empleado }}@if (c.retardo) { <div class="ck-late">Retardo {{ c.retardo.minutos }} min</div> }</td>
+              <td>{{ etqChecada[c.tipo] }}</td>
+              <td>{{ c.lugar }}</td>
+              <td><ck-status [validacion]="c.validacion" /></td>
+              <td>{{ motivo(c) }}@if (c.motivos.length > 1) { <span class="ck-text-muted"> +{{ c.motivos.length - 1 }}</span> }</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="ck-text-muted">Nada por revisar.</td></tr>
+          }
+        </tbody>
+      }
+    </table>
+  </div>
+  <ck-paginador [p]="pag" />
+</ck-page>

@@ -1,0 +1,38 @@
+// Código común de la app empleador (antes vivía en shared/, compartido entre apps).
+// Se importa como '@checador/shared' gracias al alias de tsconfig.json.
+export * from './models/models';
+export * from './api/checador-api';
+export { formatearDireccion } from './api/direccion';
+export { siguientesTipos } from './api/secuencia';
+export { API_URL, HttpChecadorApi, ErrorApi } from './api/http-checador-api';
+export { MockChecadorApi, CODIGO_2FA_DUMMY, etiquetaTipoCont } from './api/mock-checador-api';
+export * from './auth/session.service';
+export * from './auth/auth.guard';
+export * from './auth/permisos';
+export * from './auth/puede.directive';
+export { hashCorto, codigoKiosco, segundosParaCambio, VENTANA_KIOSCO_MS } from './api/sello';
+export * from './providers';
+export * from './ui/etiquetas';
+export * from './ui/ck-confirmar.sheet';
+export * from './ui/ck-navbar.component';
+export * from './ui/confirmar.service';
+export * from './ui/pipes';
+export * from './ui/fechas';
+export * from './ui/ck-page.component';
+export * from './ui/ck-status.component';
+export * from './ui/ck-stat.component';
+export * from './ui/login.page';
+export * from './ui/theme.service';
+export * from './ui/demo.service';
+export * from './ui/huella';
+export * from './ui/ck-icon.component';
+export * from './ui/paginacion';
+export * from './ui/ck-paginador.component';
+export * from './ui/ck-fecha.component';
+export * from './ui/ck-select.component';
+export * from './ui/ck-calendario.component';
+export * from './ui/ck-input.component';
+export * from './ui/ck-usuario-menu.component';
+export * from './ui/ck-area-chart.component';
+export * from './ui/ck-logo.component';
+export * from './ui/almacen';

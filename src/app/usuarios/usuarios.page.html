@@ -1,0 +1,102 @@
+<ck-page titulo="Usuarios y roles" [menu]="true">
+  @if (permisos.gestionables().length) {
+    <ion-button slot="actions" (click)="nuevo()"><ck-icon slot="start" name="user-plus" />Nuevo usuario</ion-button>
+  }
+
+  @if (!permisos.gestionables().length) {
+    <p class="ck-notice" role="status">Vista de solo lectura para revisión de accesos. Las altas y cambios los hace RH o un administrador.</p>
+  } @else if (!permisos.puede('administrar')) {
+    <p class="ck-notice" role="status">Como {{ etqRol[permisos.rol()] }} das de alta y mantienes cuentas de supervisores y líderes de proyecto. Los roles privilegiados (RH, administradores y auditores) los asigna un administrador.</p>
+  }
+
+  <div class="ck-kpis">
+    <button type="button" class="ck-kpi ck-kpi--success ck-kpi--btn" [attr.aria-pressed]="filtroEstado() === 'Activo'" (click)="filtroEstado.set(filtroEstado() === 'Activo' ? '' : 'Activo')">
+      <span class="ck-kpi__label">Activos</span><span class="ck-kpi__value">{{ cuentas().activos }}</span><span class="ck-kpi__sub">{{ cuentas().sinFactorFuerte }} sin doble factor fuerte</span>
+    </button>
+    <button type="button" class="ck-kpi ck-kpi--warning ck-kpi--btn" [attr.aria-pressed]="filtroEstado() === 'Invitado'" (click)="filtroEstado.set(filtroEstado() === 'Invitado' ? '' : 'Invitado')">
+      <span class="ck-kpi__label">Invitaciones pendientes</span><span class="ck-kpi__value">{{ cuentas().invitados }}</span><span class="ck-kpi__sub">Aún no activan su cuenta</span>
+    </button>
+    <button type="button" class="ck-kpi ck-kpi--danger ck-kpi--btn" [attr.aria-pressed]="filtroEstado() === 'Vence'" (click)="filtroEstado.set(filtroEstado() === 'Vence' ? '' : 'Vence')">
+      <span class="ck-kpi__label">Accesos por vencer</span><span class="ck-kpi__value">{{ cuentas().porVencer }}</span><span class="ck-kpi__sub">En los próximos 30 días</span>
+    </button>
+    <button type="button" class="ck-kpi ck-kpi--btn" [attr.aria-pressed]="filtroEstado() === 'Inactivo'" (click)="filtroEstado.set(filtroEstado() === 'Inactivo' ? '' : 'Inactivo')">
+      <span class="ck-kpi__label">Inactivos</span><span class="ck-kpi__value">{{ cuentas().inactivos }}</span><span class="ck-kpi__sub">Historial conservado</span>
+    </button>
+  </div>
+
+  <section class="ck-card ck-stack">
+    <div class="ck-filters">
+      <ion-searchbar placeholder="Buscar por nombre, correo, puesto u organización" aria-label="Buscar" [value]="busqueda()" [debounce]="150" (ionInput)="busqueda.set($any($event.detail.value ?? ''))" />
+      <ck-select [value]="filtroRol()" aria-label="Rol" (cambio)="filtroRol.set($event)">
+        <ck-opcion valor="" etiqueta="Todos los roles" />
+        @for (r of roles; track r) { <ck-opcion [valor]="r" etiqueta="{{ etqRol[r] }}" /> }
+      </ck-select>
+      <ck-select [value]="filtroEstado()" aria-label="Estado" (cambio)="filtroEstado.set($event)">
+        <ck-opcion valor="" etiqueta="Cualquier estado" />
+        <ck-opcion valor="Activo" etiqueta="Activos" />
+        <ck-opcion valor="Invitado" etiqueta="Invitación enviada" />
+        <ck-opcion valor="Vence" etiqueta="Por vencer" />
+        <ck-opcion valor="Inactivo" etiqueta="Inactivos" />
+      </ck-select>
+    </div>
+
+    <div class="ck-table-wrap">
+      <table class="ck-table ck-table--rows">
+        <thead><tr><th>Persona</th><th>Rol</th><th>Alcance</th><th>Doble factor</th><th>Último acceso</th><th>Estado</th><th><span class="ck-sr">Abrir</span></th></tr></thead>
+        <tbody>
+          @for (u of visibles(); track u.id) {
+            <tr (click)="abrir(u)" [class.is-muted]="u.estado === 'Inactivo'">
+              <td>
+                <div class="ck-person">
+                  <span class="ck-avatar ck-avatar--sm" aria-hidden="true">{{ iniciales(u.nombre) }}</span>
+                  <div>
+                    <strong>{{ u.nombre }}</strong>@if (u.externo) { <span class="ck-tag">Externo</span> }
+                    <div class="ck-text-muted">{{ u.puesto }}{{ u.organizacion ? ' · ' + u.organizacion : '' }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><ion-badge [color]="clrRol[u.rol]">{{ etqRol[u.rol] }}</ion-badge></td>
+              <td>{{ alcance(u.alcance) }}</td>
+              <td>
+                @if (u.dobleFactor) { {{ etqMetodo[u.dobleFactor] }}@if (u.dobleFactor === 'SMS') { <div class="ck-text-warning">Menos seguro</div> } }
+                @else { <span class="ck-text-muted">Sin configurar</span> }
+              </td>
+              <td class="nw">{{ u.ultimoAcceso ? (u.ultimoAcceso | ckFecha) : 'Nunca' }}@if (u.ultimoAcceso) { <div class="ck-text-muted">{{ u.ultimoAcceso | ckHora }}</div> }</td>
+              <td>
+                <span [class]="'ck-pill ck-pill--' + clrEstado[u.estado]">{{ etqEstado[u.estado] }}</span>
+                @if (porVencer(u)) { <div class="ck-text-danger ck-text-sm">{{ vence(u)! < 0 ? 'Acceso vencido' : 'Vence en ' + vence(u) + ' d' }}</div> }
+              </td>
+              <td class="ck-actions"><button type="button" class="ck-icon-btn ck-icon-btn--soft" [attr.aria-label]="'Ver ficha de ' + u.nombre" (click)="$event.stopPropagation(); abrir(u)"><ck-icon name="chevron-forward" /></button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="ck-text-muted">Sin resultados con esos filtros.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <h2 class="ck-section-title">Roles del portal</h2>
+  <div class="ck-role-grid">
+    @for (r of roles; track r) {
+      <article class="ck-card ck-stack ck-role-card">
+        <div class="ck-row ck-row--between"><h3 class="ck-card__title">{{ perfiles[r].nombre }}</h3><ion-badge [color]="clrRol[r]">{{ perfiles[r].secciones.length }} secciones</ion-badge></div>
+        <span class="ck-text-sm">{{ perfiles[r].descripcion }}</span>
+        <dl class="ck-dl ck-text-sm">
+          <dt>Lo asigna</dt><dd>{{ perfiles[r].quienAsigna }}</dd>
+          <dt>Alcance</dt><dd>{{ perfiles[r].alcances.map(etqAlcanceFn).join(' o ') }}</dd>
+          <dt>Vigencia</dt><dd>{{ perfiles[r].vigenciaObligatoria ? 'Obligatoria, vence sola' : 'Opcional' }}</dd>
+          @if (gestionables[r].length) { <dt>Puede dar de alta</dt><dd>{{ gestionables[r].map(etqRolFn).join(', ') }}</dd> }
+        </dl>
+      </article>
+    }
+  </div>
+
+  <aside class="ck-banner">
+    <strong>¿Y la autoridad laboral?</strong>
+    <span>
+      Un inspector de la STPS no recibe cuenta en el portal. La ley obliga a permitir la inspección y a proporcionar el registro de jornada cuando se requiera
+      (art. 132, fr. XXIV y XXXIV, LFT); eso se atiende entregando el expediente desde <a routerLink="/cumplimiento">Cumplimiento</a>, y la entrega queda en la bitácora.
+    </span>
+  </aside>
+</ck-page>

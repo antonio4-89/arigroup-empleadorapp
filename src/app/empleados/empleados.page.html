@@ -1,0 +1,42 @@
+<ck-page titulo="Colaboradores" [menu]="true">
+  <div class="ck-filters">
+    <ion-searchbar placeholder="Buscar colaborador" aria-label="Buscar" [value]="busqueda()" [debounce]="150" (ionInput)="buscar($any($event.detail.value ?? ''))" />
+    <ck-select [value]="sede()" aria-label="Sede" (cambio)="sede.set($event); pag.reiniciar()">
+      <ck-opcion valor="" etiqueta="Todas las sedes" />
+      @for (s of sedes(); track s) { <ck-opcion [valor]="s" etiqueta="{{ s }}" /> }
+    </ck-select>
+    <ck-select [value]="modalidad()" aria-label="Modalidad de trabajo" (cambio)="modalidad.set($event); pag.reiniciar()">
+      <ck-opcion valor="" etiqueta="Toda modalidad" />
+      @for (m of modalidades; track m[0]) { <ck-opcion [valor]="m[0]" etiqueta="{{ m[1] }}" /> }
+    </ck-select>
+    <ck-select [value]="estado()" aria-label="Estado de hoy" (cambio)="estado.set($event); pag.reiniciar()">
+      <ck-opcion valor="" etiqueta="Cualquier estado" />
+      @for (e of estados; track e[0]) { <ck-opcion [valor]="e[0]" etiqueta="{{ e[1] }}" /> }
+    </ck-select>
+    <ion-button *ckPuede="'configurar'" size="small" (click)="importar()">Importar colaboradores</ion-button>
+  </div>
+  @if (aviso()) { <p class="ck-notice ck-notice--ok" role="status">{{ aviso() }}</p> }
+
+  <div class="ck-table-wrap">
+    <table class="ck-table">
+      <thead><tr><th>No.</th><th>Nombre</th><th>Área</th><th>Sede</th><th>Modalidad</th><th>Cuenta</th><th>Hoy</th><th><span class="ck-sr">Ver detalle</span></th></tr></thead>
+      <tbody>
+        @for (e of pag.visibles(); track e.id) {
+          <tr class="ck-fila-link" (click)="abrir(e)">
+            <td>{{ e.numero }}</td>
+            <td>{{ e.nombre }}<div class="ck-text-muted">{{ e.puesto }}</div>@if (equiposPendientes().get(e.id); as n) { <ion-badge color="warning">{{ n }} equipo{{ n === 1 ? '' : 's' }} por vincular</ion-badge> }</td>
+            <td>{{ e.departamento }}</td>
+            <td>{{ e.sede }}</td>
+            <td>{{ etqModalidad[e.modalidad] }}</td>
+            <td><span [class]="e.cuenta === 'Activa' ? 'ck-pill ck-pill--success' : 'ck-pill ck-pill--warning'">{{ e.cuenta === 'Activa' ? 'Activa' : 'Invitada' }}</span></td>
+            <td><ion-badge [color]="clrEstado[e.estadoHoy]">{{ etqEstado[e.estadoHoy] }}</ion-badge></td>
+            <td class="ck-actions"><a class="ck-icon-btn ck-icon-btn--soft" [routerLink]="['/empleados', e.id]" [attr.aria-label]="'Ver detalle de ' + e.nombre" (click)="$event.stopPropagation()"><ck-icon name="chevron-forward" /></a></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="ck-text-muted">Sin resultados.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <ck-paginador [p]="pag" />
+</ck-page>

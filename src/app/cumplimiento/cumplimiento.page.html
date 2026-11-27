@@ -1,0 +1,46 @@
+<ck-page titulo="Cumplimiento" [menu]="true">
+  <ion-button slot="actions" size="small" (click)="exportar()">Descargar CSV</ion-button>
+  <ion-button slot="actions" size="small" fill="outline" (click)="imprimir()">Imprimir</ion-button>
+
+  @if (generado()) { <p class="ck-notice ck-notice--ok" role="status">{{ generado() }}</p> }
+
+  <section class="ck-card ck-cumple__resumen" aria-label="Resumen de cumplimiento">
+    <div class="ck-cumple__global">
+      <span class="ck-cumple__pct">{{ porcentaje() }}%</span>
+      <span class="ck-text-muted">de los {{ controles().length }} controles cumplen</span>
+    </div>
+    <div class="ck-meter" role="img" [attr.aria-label]="porcentaje() + '% de controles que cumplen'"><span [style.width.%]="porcentaje()"></span></div>
+    <dl class="ck-cumple__cifras">
+      <div class="ck-cumple__cifra ck-cumple__cifra--success"><dt>Cumplen</dt><dd>{{ cuenta().cumple }}</dd></div>
+      <div class="ck-cumple__cifra ck-cumple__cifra--warning"><dt>Requieren atención</dt><dd>{{ cuenta().atencion }}</dd></div>
+      <div class="ck-cumple__cifra ck-cumple__cifra--danger"><dt>Pendientes</dt><dd>{{ cuenta().pendiente }}</dd></div>
+    </dl>
+  </section>
+
+  <div class="ck-chips" role="group" aria-label="Filtrar controles">
+    @for (f of filtros; track f.valor) {
+      <button type="button" class="ck-chip" [attr.aria-pressed]="filtro() === f.valor" (click)="filtro.set(f.valor)">{{ f.etiqueta }} <strong>{{ conteo()[f.valor] }}</strong></button>
+    }
+  </div>
+
+  <section class="ck-card ck-cumple__lista" aria-label="Controles">
+    @for (g of areas(); track g.area) {
+      <h2 class="ck-cumple__area">{{ g.area }}</h2>
+      <ul class="ck-cumple__filas">
+        @for (c of g.items; track c.id) {
+          <li class="ck-cumple__fila">
+            <span [class]="'ck-pill ck-pill--' + clr[c.estado]">{{ etq[c.estado] }}</span>
+            <div class="ck-cumple__texto">
+              <strong>{{ c.titulo }}</strong>
+              <span class="ck-text-sm ck-text-muted">{{ c.detalle }}</span>
+            </div>
+            <span class="ck-cumple__ref ck-text-sm ck-text-muted">{{ c.referencia }}</span>
+            <a class="ck-link" [routerLink]="c.ruta" [attr.aria-label]="'Ver ' + c.titulo">Ver</a>
+          </li>
+        }
+      </ul>
+    } @empty {
+      <p class="ck-text-muted">No hay controles con ese estado.</p>
+    }
+  </section>
+</ck-page>

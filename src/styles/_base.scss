@@ -1,0 +1,30 @@
+body {
+  font-family: var(--ck-font-family);
+  line-height: var(--ck-line-height-normal);
+}
+
+.ck-page {
+  padding: var(--ck-space-4) var(--ck-space-4) var(--ck-page-bottom-inset, var(--ck-space-4));
+  max-width: var(--ck-page-max-width);
+  margin-inline: auto;
+}
+
+.ck-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-3);
+}
+
+.ck-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ck-space-3);
+}
+
+.ck-row--between { justify-content: space-between; }
+
+.ck-text-muted { color: var(--ck-color-text-muted); }
+.ck-text-warning { color: var(--ck-color-warning); }
+.ck-text-center { text-align: center; }
+.ck-text-sm { font-size: var(--ck-font-size-sm); }
+

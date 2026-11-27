@@ -1,0 +1,41 @@
+<ck-page titulo="Contingencias" [menu]="true">
+
+  @if (activa(); as c) {
+    <div class="ck-banner ck-banner--contingencia">
+      <strong>Activa: {{ etqTipo[c.tipo] }} · {{ c.alcance }}</strong>
+      <span>Efecto: {{ etqEfecto[c.efecto] }} · desde {{ c.inicio | ckHora }} · {{ c.checadasAfectadas }} checadas marcadas</span>
+      <div><ion-button *ckPuede="'configurar'" size="small" color="danger" (click)="cerrar(c)">Cerrar contingencia</ion-button></div>
+    </div>
+  } @else {
+    <form *ckPuede="'configurar'" class="ck-card ck-stack" (submit)="$event.preventDefault(); declarar()">
+      <h2 class="ck-card__title">Declarar contingencia</h2>
+      <ck-select label="Tipo de evento" [value]="tipo()" (cambio)="tipo.set($event)">
+          @for (t of tipos; track t[0]) { <ck-opcion [valor]="t[0]" etiqueta="{{ t[1] }}" /> }
+        </ck-select>
+      <ck-input label="Alcance" placeholder="Toda la empresa, Planta Norte, grupo…" [value]="alcance()" (cambio)="alcance.set($event)" />
+      <ck-select label="Efecto sobre la jornada" [value]="efecto()" (cambio)="efecto.set($event)">
+          @for (e of efectos; track e[0]) { <ck-opcion [valor]="e[0]" etiqueta="{{ e[1] }}" /> }
+        </ck-select>
+      <ck-input label="Nota para el expediente" rows="2" [value]="nota()" (cambio)="nota.set($event)" />
+      @if (error()) { <p class="ck-notice ck-notice--error" role="alert">{{ error() }}</p> }
+      <ion-button type="submit" [disabled]="ocupado()">Declarar contingencia</ion-button>
+    </form>
+  }
+
+  <h2 class="ck-section-title">Historial</h2>
+  <div class="ck-table-wrap">
+    <table class="ck-table">
+      <thead><tr><th>Inicio</th><th>Fin</th><th>Evento</th><th>Alcance</th><th>Efecto</th><th>Declaró</th><th class="num">Checadas</th></tr></thead>
+      <tbody>
+        @for (c of lista(); track c.id) {
+          <tr>
+            <td>{{ c.inicio | ckFecha }} {{ c.inicio | ckHora }}</td>
+            <td>@if (c.fin) { {{ c.fin | ckFecha }} {{ c.fin | ckHora }} } @else { <ion-badge color="warning">Activa</ion-badge> }</td>
+            <td>{{ etqTipo[c.tipo] }}</td><td>{{ c.alcance }}</td><td>{{ etqEfecto[c.efecto] }}</td>
+            <td>{{ c.declaradaPor }}</td><td class="num">{{ c.checadasAfectadas }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</ck-page>

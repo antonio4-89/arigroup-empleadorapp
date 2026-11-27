@@ -1,0 +1,36 @@
+<ion-split-pane contentId="main" when="lg">
+  <ion-menu contentId="main" class="ck-sidebar">
+    <ion-content>
+      <nav class="ck-side" aria-label="Secciones">
+        <a class="ck-side__brand" routerLink="/panel" aria-label="1ari Checador, ir al panel">
+          <ck-logo class="ck-side__mark" variante="simbolo" />
+          <span class="ck-side__lockup">
+            <ck-logo tono="claro" />
+            <span class="ck-side__product">Checador · Portal RH</span>
+          </span>
+        </a>
+
+        @for (g of grupos(); track g.titulo) {
+          <span class="ck-side__group">{{ g.titulo }}</span>
+          @for (s of g.secciones; track s) {
+            <ion-menu-toggle [autoHide]="false">
+              <a class="ck-side__link" [routerLink]="'/' + s" routerLinkActive="is-active" [attr.title]="etq[s]">
+                <ck-icon [name]="iconos[s]" />
+                <span class="ck-side__text">{{ etq[s] }}</span>
+                @if (badges()[s]) { <span class="ck-side__dot"></span><span class="ck-nav__badge">{{ badges()[s] }}</span> }
+              </a>
+            </ion-menu-toggle>
+          }
+        }
+
+        <div class="ck-side__foot">
+          <span class="ck-side__env"><span class="ck-side__env-dot"></span><span class="ck-side__text">Versión de demostración</span></span>
+        </div>
+      </nav>
+    </ion-content>
+  </ion-menu>
+  <div id="main" class="ck-main">
+    <ck-navbar />
+    <div class="ck-main__vista"><ion-router-outlet /></div>
+  </div>
+</ion-split-pane>

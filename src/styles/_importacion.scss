@@ -1,0 +1,46 @@
+// Carga masiva (importar empleados): pasos numerados, zona para soltar el archivo y revisión de filas.
+
+.ck-import {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ck-space-4);
+
+  &__pasos { display: flex; flex-direction: column; gap: var(--ck-space-4); margin: 0; padding: 0; list-style: none; }
+  &__paso { display: flex; align-items: flex-start; gap: var(--ck-space-3); }
+  &__num { flex: none; display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--ck-color-primary); color: var(--ck-color-on-primary); font-size: var(--ck-font-size-sm); font-weight: var(--ck-font-weight-bold); }
+  &__cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--ck-space-2); }
+
+  &__columnas { display: grid; gap: var(--ck-space-1) var(--ck-space-4); grid-template-columns: max-content 1fr; margin: 0; padding: var(--ck-space-3); border-radius: var(--ck-radius-md); background: var(--ck-color-bg); font-size: var(--ck-font-size-sm); div { display: contents; } dt { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-weight: var(--ck-font-weight-semibold); } dd { margin: 0; color: var(--ck-color-text-muted); } }
+
+  &__manual { font-size: var(--ck-font-size-sm); summary { cursor: pointer; color: var(--ck-color-primary); padding: var(--ck-space-1) 0; } ck-input { margin: var(--ck-space-2) 0; } }
+
+  &__resumen { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ck-space-3); }
+  .ck-chip { display: inline-flex; align-items: center; gap: var(--ck-space-1); }
+  .ck-chip--alerta { color: var(--ck-color-danger); border-color: color-mix(in srgb, var(--ck-color-danger) 40%, var(--ck-color-border)); &[aria-checked='true'] { background: var(--ck-color-danger); color: var(--ck-color-surface); } }
+  &__ok { display: inline-flex; align-items: center; gap: var(--ck-space-1); color: var(--ck-color-success); font-size: var(--ck-font-size-sm); font-weight: var(--ck-font-weight-semibold); }
+
+  &__tabla { max-height: 20rem; overflow: auto; thead th { position: sticky; top: 0; z-index: 1; } tr.is-error td { background: color-mix(in srgb, var(--ck-color-danger) 6%, var(--ck-color-surface)); } .ck-icon { vertical-align: -0.125em; } }
+
+  // Botones de importar siempre a la vista al desplazar la lista.
+  &__acciones { position: sticky; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: var(--ck-space-1); margin: 0 calc(var(--ck-space-4) * -1); padding: var(--ck-space-3) var(--ck-space-4) calc(var(--ck-space-2) + env(safe-area-inset-bottom, 0px)); background: var(--ck-color-bg); border-top: 1px solid var(--ck-color-border); }
+}
+
+// Zona para arrastrar y soltar (o tocar) el archivo.
+.ck-drop {
+  display: flex;
+  align-items: center;
+  gap: var(--ck-space-3);
+  padding: var(--ck-space-5) var(--ck-space-4);
+  border: 2px dashed var(--ck-color-border);
+  border-radius: var(--ck-radius-lg);
+  background: var(--ck-color-surface);
+  cursor: pointer;
+  transition: border-color var(--ck-motion-fast), background var(--ck-motion-fast);
+
+  &:hover, &.is-over { border-color: var(--ck-color-primary); background: color-mix(in srgb, var(--ck-color-primary) 6%, var(--ck-color-surface)); }
+  &:focus-visible { outline: 2px solid var(--ck-color-primary); outline-offset: 2px; }
+  &.is-lleno { padding: var(--ck-space-3) var(--ck-space-4); border-style: solid; }
+
+  &__icono { flex: none; font-size: 2rem; color: var(--ck-color-primary); }
+  &__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } small { color: var(--ck-color-text-muted); } }
+}
